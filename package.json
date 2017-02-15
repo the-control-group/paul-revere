@@ -1,5 +1,5 @@
 {
-  "name": "schema-socket",
+  "name": "paul-revere",
   "version": "1.0.0",
   "description": "Websocket package combining uws and schemapack",
   "main": "index.js",
@@ -13,6 +13,10 @@
   ],
   "engines": {
     "node": ">=7.0"
+  },
+	"repository": {
+    "type": "git",
+    "url": "https://github.com/the-control-group/paul-revere.git"
   },
   "devDependencies": {
     "eslint": "^3.15.0"

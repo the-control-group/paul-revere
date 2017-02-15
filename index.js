@@ -104,7 +104,7 @@ class Client {
 	}
 }
 
-class SchemaSocket {
+class PaulRevere {
 	constructor(schemas = {}, remote) {
 		if(!remote) throw new TypeError('Must pass a url or http server to connect to');
 
@@ -187,4 +187,4 @@ class SchemaSocket {
 	}
 }
 
-module.exports = SchemaSocket;
+module.exports = PaulRevere;
