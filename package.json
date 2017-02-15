@@ -1,0 +1,82 @@
+{
+  "name": "schema-socket",
+  "version": "1.0.0",
+  "description": "Websocket package combining uws and schemapack",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "websockets",
+    "schemapack",
+    "uws"
+  ],
+  "engines": {
+    "node": ">=7.0"
+  },
+  "devDependencies": {
+    "eslint": "^3.15.0"
+  },
+  "browser": {
+    "./websocket.js": "./websocket-client.js"
+  },
+  "files": [
+    "index.js"
+  ],
+  "eslintConfig": {
+    "extends": [
+      "eslint:recommended"
+    ],
+    "env": {
+      "browser": true,
+      "node": true,
+      "es6": true
+    },
+    "rules": {
+      "strict": 0,
+      "indent": [
+        2,
+        "tab",
+        {
+          "SwitchCase": 1
+        }
+      ],
+      "comma-dangle": 2,
+      "no-unused-vars": [
+        2,
+        {
+          "args": "none"
+        }
+      ],
+      "no-console": 0,
+      "no-var": 2,
+      "space-before-function-paren": [
+        2,
+        {
+          "anonymous": "always",
+          "named": "never"
+        }
+      ],
+      "semi": [
+        2,
+        "always"
+      ],
+      "space-infix-ops": 0,
+      "max-len": [
+        2,
+        200,
+        2
+      ],
+      "padded-blocks": 0,
+      "no-multiple-empty-lines": 0
+    }
+  },
+  "author": "Joe Furfaro",
+  "license": "MIT",
+  "dependencies": {
+    "blob-to-buffer": "^1.2.6",
+    "detect-node": "^2.0.3",
+    "schemapack": "^1.4.2",
+    "uws": "^0.12.0"
+  }
+}
