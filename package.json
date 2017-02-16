@@ -1,6 +1,6 @@
 {
   "name": "paul-revere",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Lightweight WebSocket messaging between browsers and Node",
   "main": "index.js",
   "scripts": {
@@ -14,7 +14,7 @@
   "engines": {
     "node": ">=7.0"
   },
-	"repository": {
+  "repository": {
     "type": "git",
     "url": "https://github.com/the-control-group/paul-revere.git"
   },
