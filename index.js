@@ -1,5 +1,7 @@
-const { build } = require('schemapack'),
+const url = require('url'),
+	{ build } = require('schemapack'),
 	toBuffer = require('blob-to-buffer'),
+	uuid = require('uuid'),
 	WebSocket = require('./websocket'),
 	isNode = require('detect-node');
 
@@ -7,6 +9,9 @@ const { build } = require('schemapack'),
 const schemaMap = Symbol('schemaMap'),
 	ws = Symbol('websocket'),
 	uwsc = Symbol('uwsClient'),
+	id = Symbol('id'),
+	ci = Symbol('ci'),
+	ps = Symbol('pubSub'),
 	bs = Symbol('builtSchema'),
 	si = Symbol('schemaIndex'),
 	rb = Symbol('receiveBuffer'),
@@ -49,58 +54,93 @@ function parseMessage(b, sMap) {
 }
 
 /**
+ * Stub pub/sub
+ */
+
+const stubPubSub = {
+	publish(subject, msg, exclude) {
+		if(!this.listeners[`paulrevere.${subject}`]) return;
+
+		this.listeners[`paulrevere.${subject}`].forEach(cb => cb(msg, exclude));
+	},
+
+	subscribe(subject, cb) {
+		if(!this.listeners[`paulrevere.${subject}`]) this.listeners[`paulrevere.${subject}`] = [];
+
+		this.listeners[`paulrevere.${subject}`].push(cb);
+	},
+
+	listeners: {}
+};
+
+/**
  * Schema class handles its own tranmission and reception of data
  */
 class Schema {
-	constructor(builtSchema, schemaIndex, websocket) {
+	constructor(builtSchema, schemaIndex, websocket, clientId, pubSub) {
 		this[si] = schemaIndex;
 		this[bs] = builtSchema;
 		this[ws] = websocket;
+		this[ci] = clientId;
+		this[ps] = pubSub;
 		this[rb] = buff => {
 			const msg = this[bs].decode(buff);
-
-			delete msg.__schema;
 
 			this[om](msg);
 		};
 
 		// Default to noop
 		this[om] = () => {};
+
+		// Subscribe to broadcasts
+		if(isNode && this[ps]) {
+			this[ps].subscribe(String(this[si]), (msg, exclude) => {
+
+				this[ws].clients.forEach(c => {
+
+					// Exclude a specific client
+					if(exclude === c.__uuid) return;
+
+					// Set the schema index
+					msg.__schema = this[si];
+					// Set the client id
+					msg.__uuid = this[ci];
+
+					c.send(this[bs].encode(msg));
+				});
+			});
+		}
 	}
 
 	onMessage(cb) {
 		this[om] = cb;
 	}
 
-	send(data = {}) {
+	send(msg = {}) {
 		// Set the schema index
-		data.__schema = this[si];
-		this[ws].send(this[bs].encode(data));
+		msg.__schema = this[si];
+		// Set the client id
+		msg.__uuid = this[ci];
+
+		this[ws].send(this[bs].encode(msg));
 	}
 
-	broadcast(data = {}, exclude) {
-		if(!this[ws].clients) throw Error('Cannot broadcast from single client');
+	broadcast(msg = {}, exclude) {
+		if(!isNode || !this[ps]) throw Error('Cannot broadcast from single client');
 
-		this[ws].clients.forEach(c => {
-			// Exclude a specific client
-			if(exclude && c === exclude[uwsc]) return;
-
-			// Set the schema index
-			data.__schema = this[si];
-
-			c.send(this[bs].encode(data));
-		});
+		this[ps].publish(String(this[si]), msg, exclude);
 	}
 }
 
 class Client {
 	constructor(uwsClient, builtSchemas) {
+		this.__uuid = uwsClient.__uuid;
 		this[uwsc] = uwsClient;
 		this[schemaMap] = new Map();
 
 		let i = 0;
 		builtSchemas.forEach((builtSchema, key) => {
-			const schema = new Schema(builtSchema, i, this[uwsc]);
+			const schema = new Schema(builtSchema, i, this[uwsc], this.__uuid);
 
 			this[schemaMap].set(i, schema);
 
@@ -122,14 +162,15 @@ class Client {
 }
 
 class PaulRevere {
-	constructor(schemas = {}, remote) {
+	constructor(schemas = {}, remote, pubSub = stubPubSub) {
 		if(!remote) throw new TypeError('Must pass a url or http server to connect to');
 
 		this[schemaMap] = new Map();
+		this[id] = uuid.v4();
 
 		// Switch between client and server websocket
 		if(typeof remote === 'string') {
-			this[ws] = new WebSocket(remote);
+			this[ws] = new WebSocket(`${remote}?clientId=${this[id]}`);
 		} else {
 			if(!isNode) throw new Error('Cannot create WebSocket server in browser environment');
 
@@ -144,10 +185,11 @@ class PaulRevere {
 			const builtSchema = build(Object.assign({
 				// Adding this parameter to a schema allows us to parse it later as a buffer
 				// so the receipient does not need to know what type of information was sent
-				__schema: 'uint8'
+				__schema: 'uint8',
+				__uuid: 'string'
 			}, schemas[key]));
 
-			const schema = new Schema(builtSchema, i, this[ws]);
+			const schema = new Schema(builtSchema, i, this[ws], this[id], pubSub);
 
 			this[schemaMap].set(i, schema);
 			builtSchemas.set(key, builtSchema);
@@ -175,6 +217,9 @@ class PaulRevere {
 		if(typeof remote !== 'string') {
 			this.onConnection = cb => {
 				this[ws].on('connection', c => {
+
+					c.__uuid = url.parse(c.upgradeReq.url, true).query.clientId || uuid.v4();
+
 					const client = new Client(c, builtSchemas);
 
 					cb(client);
