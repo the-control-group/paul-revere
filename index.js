@@ -6,11 +6,11 @@ const { build } = require('schemapack'),
 // Symbols to keep the class properties somewhat private
 const schemaMap = Symbol('schemaMap'),
 	ws = Symbol('websocket'),
+	uwsc = Symbol('uwsClient'),
 	bs = Symbol('builtSchema'),
 	si = Symbol('schemaIndex'),
 	rb = Symbol('receiveBuffer'),
-	om = Symbol('onMessage'),
-	uwsc = Symbol('uwsClient');
+	om = Symbol('onMessage');
 
 /**
  * Universal message parser
@@ -48,6 +48,9 @@ function parseMessage(b, sMap) {
 	});
 }
 
+/**
+ * Schema class handles its own tranmission and reception of data
+ */
 class Schema {
 	constructor(builtSchema, schemaIndex, websocket) {
 		this[si] = schemaIndex;
@@ -73,6 +76,20 @@ class Schema {
 		// Set the schema index
 		data.__schema = this[si];
 		this[ws].send(this[bs].encode(data));
+	}
+
+	broadcast(data = {}, exclude) {
+		if(!this[ws].clients) throw Error('Cannot broadcast from single client');
+
+		this[ws].clients.forEach(c => {
+			// Exclude a specific client
+			if(exclude && c === exclude[uwsc]) return;
+
+			// Set the schema index
+			data.__schema = this[si];
+
+			c.send(this[bs].encode(data));
+		});
 	}
 }
 
@@ -168,22 +185,8 @@ class PaulRevere {
 		}
 	}
 
-	onMessage(cb) {
-		if(this[ws].Server) {
-			this[ws].on('message', data => {
-				this.decode(data)
-					.then(message => cb(null, message))
-					.catch(e => cb(e));
-			});
-		} else {
-			this[ws].onmessage = m => {
-				this.decode(m.data)
-					.then(message => cb(null, message))
-					.catch(e => cb(e));
-			};
-		}
-
-		return this;
+	close() {
+		this[ws].close();
 	}
 }
 

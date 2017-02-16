@@ -1,7 +1,7 @@
 {
   "name": "paul-revere",
   "version": "1.0.0",
-  "description": "Websocket package combining uws and schemapack",
+  "description": "Lightweight WebSocket messaging between browsers and Node",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
