@@ -99,7 +99,8 @@ class Schema {
 				this[ws].clients.forEach(c => {
 
 					// Exclude a specific client
-					if(exclude === c.__uuid) return;
+					// Check for argument existence to avoid accidental `undefined === undefined === true`
+					if(exclude && exclude === c.__uuid) return;
 
 					// Set the schema index
 					msg.__schema = this[si];
@@ -125,10 +126,15 @@ class Schema {
 		this[ws].send(this[bs].encode(msg));
 	}
 
-	broadcast(msg = {}, exclude) {
+	/**
+	 * Broadcast a message to all clients, and optionally exclude one
+	 * @param {Object} msg - Message to broadcast. Must follow the rules set in the schema
+	 * @param {Client} [exclude] - Client to exclude from the broadcast
+	 */
+	broadcast(msg = {}, exclude = {}) {
 		if(!isNode || !this[ps]) throw Error('Cannot broadcast from single client');
 
-		this[ps].publish(String(this[si]), msg, exclude);
+		this[ps].publish(String(this[si]), msg, exclude.__uuid);
 	}
 }
 
