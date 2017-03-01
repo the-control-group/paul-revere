@@ -25,7 +25,9 @@
     "./websocket.js": "./websocket-client.js"
   },
   "files": [
-    "index.js"
+    "index.js",
+		"websocket-client.js",
+		"websocket.js"
   ],
   "eslintConfig": {
     "extends": [
