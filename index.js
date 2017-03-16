@@ -217,6 +217,10 @@ class PaulRevere {
 					.then(({schema, buff}) => schema[rb](buff))
 					.catch(e => console.error(e));
 			};
+
+			this.onClose = cb => {
+				this[ws].onclose = cb;
+			};
 		}
 
 		// For servers, bind a connection listener and return a Client
