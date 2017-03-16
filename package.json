@@ -29,7 +29,7 @@
     ]
   },
   "browser": {
-    "./websocket.js": "./websocket-client.js"
+    "./dist/websocket.js": "./dist/websocket-client.js"
   },
   "files": [
     "dist"
