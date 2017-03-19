@@ -162,6 +162,10 @@ class Client {
 		});
 	}
 
+	close() {
+		this[uwsc].close();
+	}
+
 	onClose(cb) {
 		this[uwsc].on('close', cb);
 	}
