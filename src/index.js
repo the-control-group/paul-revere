@@ -141,6 +141,7 @@ class Schema {
 class Client {
 	constructor(uwsClient, builtSchemas) {
 		this.__uuid = uwsClient.__uuid;
+		this.upgradeReq = uwsClient.upgradeReq;
 		this[uwsc] = uwsClient;
 		this[schemaMap] = new Map();
 
