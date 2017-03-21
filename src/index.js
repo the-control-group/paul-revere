@@ -1,4 +1,4 @@
-const url = require('url'),
+const urlUtil = require('url'),
 	{ build } = require('schemapack'),
 	toBuffer = require('blob-to-buffer'),
 	uuid = require('uuid'),
@@ -173,19 +173,29 @@ class Client {
 }
 
 class PaulRevere {
-	constructor(schemas = {}, remote, pubSub = stubPubSub) {
-		if(!remote) throw new TypeError('Must pass a url or http server to connect to');
+	constructor(schemas = {message: {payload: 'string', meta: {timestamp: 'varuint'}}}, { url, queryParams = {}, server, pubSub = stubPubSub } = {}) {
+		if(url && typeof url !== 'string') throw new TypeError('Remote url must be a string');
+		if(url && server) throw new Error('Remote and Server cannot both be defined');
 
 		this[schemaMap] = new Map();
 		this[id] = uuid.v4();
 
 		// Switch between client and server websocket
-		if(typeof remote === 'string') {
-			this[ws] = new WebSocket(`${remote}?clientId=${this[id]}`);
-		} else {
-			if(!isNode) throw new Error('Cannot create WebSocket server in browser environment');
+		let query;
+		switch(true) {
+			case !!url:
+				query = Object.assign({}, queryParams, {clientId: this[id]});
+				this[ws] = new WebSocket(url + urlUtil.format({query}));
+				break;
 
-			this[ws] = new WebSocket.Server({server: remote});
+			case !!server:
+				if(!isNode) throw new Error('Cannot create WebSocket server in browser environment');
+
+				this[ws] = new WebSocket.Server({server});
+				break;
+
+			default:
+				throw new Error('Remote or Server must be defined');
 		}
 
 		// Local reference of the schemapack schemas for Clients to use
@@ -233,7 +243,7 @@ class PaulRevere {
 			this.onConnection = cb => {
 				this[ws].on('connection', c => {
 
-					c.__uuid = url.parse(c.upgradeReq.url, true).query.clientId || uuid.v4();
+					c.__uuid = urlUtil.parse(c.upgradeReq.url, true).query.clientId || uuid.v4();
 
 					const client = new Client(c, builtSchemas);
 
@@ -243,6 +253,10 @@ class PaulRevere {
 				return this;
 			};
 		}
+	}
+
+	get rawClients() {
+		return this[ws].clients;
 	}
 
 	close() {
