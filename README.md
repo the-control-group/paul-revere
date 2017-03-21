@@ -36,7 +36,7 @@ const app = express();
 const server = app.listen(3000, () => app.log.info('Paul Revere App listening on port 3000'));
 
 // Pass your schemas and a Node server to start a Paul Revere WebSocket server
-const paul = new PaulRevere(schemas, server);
+const paul = new PaulRevere(schemas, {server});
 
 // Bind a client connection handler
 paul.onConnection(client => {
@@ -83,7 +83,7 @@ import PaulRevere from 'paul-revere';
 import schemas from '../shared/schemas'; // same module as server
 
 // Pass your schemas and a WebSocket address to connect to a Paul Revere server
-const paul = new PaulRevere(schemas, 'ws://localhost:3000'),
+const paul = new PaulRevere(schemas, {url: 'ws://localhost:3000'}),
 
 // The client exposes your schemas to send messages to the server
 paul.chat.send({
@@ -105,7 +105,7 @@ paul.chat.onMessage(m => {
 
 ## Server Adapters
 
-In order to support horizontal server scaling, Paul Revere servers internally run off a pub/sub model for broadcasting messages. The default is nothing more than a stub function firing callbacks (see below). Custom adapters can be written and passed as an object as the third argument when instantiating a server, and Paul Revere will use that instead. There is an official NATS adapter at [paul-revere-nats-adapter](https://github.com/the-control-group/paul-revere-nats-adapter).
+In order to support horizontal server scaling, Paul Revere servers internally run off a pub/sub model for broadcasting messages. The default is nothing more than a stub function firing callbacks (see below). Custom adapters can be written and passed as the option `pubSub` when instantiating a server, and Paul Revere will use that instead. There is an official NATS adapter at [paul-revere-nats-adapter](https://github.com/the-control-group/paul-revere-nats-adapter).
 
 ### Adapter API
 
@@ -132,5 +132,5 @@ const pubSubAdapter = {
 	listeners: {}
 };
 
-const paul = new PaulRevere(schemas, server, pubSubAdapter);
+const paul = new PaulRevere(schemas, {server, pubSub: pubSubAdapter});
 ```
