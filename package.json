@@ -1,6 +1,6 @@
 {
   "name": "paul-revere",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "description": "Lightweight WebSocket messaging between browsers and Node",
   "main": "dist/index.js",
   "scripts": {
