@@ -1,3 +1,3 @@
-const uws = require('uws');
+const ws = require('ws');
 
-module.exports = uws;
+module.exports = ws;

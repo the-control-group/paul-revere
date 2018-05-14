@@ -8,7 +8,7 @@ const urlUtil = require('url'),
 // Symbols to keep the class properties somewhat private
 const schemaMap = Symbol('schemaMap'),
 	ws = Symbol('websocket'),
-	uwsc = Symbol('uwsClient'),
+	wsc = Symbol('wsClient'),
 	id = Symbol('id'),
 	ci = Symbol('ci'),
 	ps = Symbol('pubSub'),
@@ -142,12 +142,12 @@ class Client {
 	constructor(uwsClient, builtSchemas) {
 		this.__uuid = uwsClient.__uuid;
 		this.upgradeReq = uwsClient.upgradeReq;
-		this[uwsc] = uwsClient;
+		this[wsc] = uwsClient;
 		this[schemaMap] = new Map();
 
 		let i = 0;
 		builtSchemas.forEach((builtSchema, key) => {
-			const schema = new Schema(builtSchema, i, this[uwsc], this.__uuid);
+			const schema = new Schema(builtSchema, i, this[wsc], this.__uuid);
 
 			this[schemaMap].set(i, schema);
 
@@ -156,7 +156,7 @@ class Client {
 			i++;
 		});
 
-		this[uwsc].on('message', m => {
+		this[wsc].on('message', m => {
 			parseMessage(m, this[schemaMap])
 				.then(({schema, buff}) => schema[rb](buff))
 				.catch(e => console.error(e));
@@ -164,11 +164,11 @@ class Client {
 	}
 
 	close() {
-		this[uwsc].close();
+		this[wsc].close();
 	}
 
 	onClose(cb) {
-		this[uwsc].on('close', cb);
+		this[wsc].on('close', cb);
 	}
 }
 
