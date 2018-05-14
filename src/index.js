@@ -241,7 +241,9 @@ class PaulRevere {
 		// For servers, bind a connection listener and return a Client
 		if(typeof remote !== 'string') {
 			this.onConnection = cb => {
-				this[ws].on('connection', c => {
+				this[ws].on('connection', (c, req) => {
+					// Add the connection request to the client
+					c.upgradeReq = req;
 
 					c.__uuid = urlUtil.parse(c.upgradeReq.url, true).query.clientId || uuid.v4();
 

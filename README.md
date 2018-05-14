@@ -2,7 +2,7 @@
 
 # Paul Revere
 
-Paul Revere is a lightweight wrapper for server-client WebSocket communication. It uses [schemapack](https://github.com/phretaddin/schemapack) to encode buffers from JavaScript objects and delivers a smaller payload and faster parsing than traditional JSON messaging. On the browser, it wraps a vanilla WebSocket object, and on the server it wraps the ultra-fast [µWebSockets](https://github.com/uWebSockets/uWebSockets) package.
+Paul Revere is a lightweight wrapper for server-client WebSocket communication. It uses [schemapack](https://github.com/phretaddin/schemapack) to encode buffers from JavaScript objects and delivers a smaller payload and faster parsing than traditional JSON messaging. On the browser, it wraps a vanilla WebSocket object, and on the server it wraps the [ws](https://github.com/websockets/ws) package.
 
 Paul Revere also accepts pub/sub adapters to allows for horizontal server scaling.
 
